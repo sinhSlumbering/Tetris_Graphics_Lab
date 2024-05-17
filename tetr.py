@@ -47,7 +47,7 @@ def bump_ground(rect):
         return True
     return False
 
-def gameEvent(grid, tetromino, dwn, Window):
+def gameEvent(grid, tetromino, dwn, ctr, Window):
     change = False
     rotate = False
     dx = 0
@@ -60,21 +60,35 @@ def gameEvent(grid, tetromino, dwn, Window):
         rotate = True
     elif glfw.get_key(Window, glfw.KEY_DOWN):
         dy = 1
+    #check lines
+    line = GH-1
+    for row in range(GH-1, -1, -1):
+        count = 0
+        for i in range(GW):
+            if field[row][i]:
+                count+=1
+            field[line][i] = field[row][i]
+        if count < GW:
+            line -= 1
+
     # Draw Grid
     [engine.drawRect(rect, 1, Window) for rect in grid]
 
     #Rotate Tetromino
+    old_tet = deepcopy(tetromino)
     center = tetromino[0]
     if rotate:
         for i in range(4):
             x = tetromino[i].y - center.y
             y = tetromino[i].x - center.x
             tetromino[i].x = center.x - x
-            tetromino[i].y = center.y - y
-        if bump_walls(tetromino[i]):
-            tetromino = deepcopy(old_tet)
-        elif bump_ground(tetromino[i]):
-            tetromino = deepcopy(old_tet)
+            tetromino[i].y = center.y + y
+            if bump_walls(tetromino[i]):
+                tetromino = deepcopy(old_tet)
+                break
+            elif bump_ground(tetromino[i]):
+                tetromino = deepcopy(old_tet)
+                break
 
     # Drawing Tetromino
     [engine.drawRect(engine.Rect(int(tetromino[i].x*TILE),int(tetromino[i].y*TILE),TILE-2, TILE-2), 2, Window)for i, t in enumerate(tetromino)]
@@ -92,11 +106,14 @@ def gameEvent(grid, tetromino, dwn, Window):
             break
         elif bump_ground(tetromino[i]):
             tetromino = deepcopy(old_tet)
-            for i in range(4):
-                field[tetromino[i].y][tetromino[i].x] = 1
-            change = True
+            ctr += 2
+            if ctr > 30:
+                for i in range(4):
+                    field[tetromino[i].y][tetromino[i].x] = 1
+                change = True
+            break
             
-    return tetromino, change
+    return tetromino, change, ctr
 
 def main():
     # Initialize GLFW
@@ -109,7 +126,7 @@ def main():
         return
     # Enable key events
     
-    glfw.set_input_mode(Window,glfw.STICKY_KEYS,GL_TRUE) 
+    glfw.set_input_mode(Window,glfw.STICKY_KEYS,GL_FALSE) 
 
     # Enable key event callback
     # glfw.set_key_callback(Window,key_event)
@@ -129,19 +146,23 @@ def main():
     grid = [engine.Rect(x*TILE, y * TILE, TILE, TILE) for x in range(GW) for y in range(GH)]
     tetromino = deepcopy(choice(tetrominos))
     st_time = time.time()
+    ctr = 0
     while not glfw.window_should_close(Window):
-        glfw.wait_events()
+        glfw.poll_events()
         dy = 0
-        if time.time()-st_time>1:
+        if time.time()-st_time>1 and ctr < 25:
             dy=1
             st_time = time.time()
+            ctr += 1
         # Clear the screen
         glClear(GL_COLOR_BUFFER_BIT)
 
-        tetromino, change = gameEvent(grid, tetromino, dy, Window)
+        tetromino, change, ctr = gameEvent(grid, tetromino, dy, ctr, Window)
 
         if change:
             tetromino = deepcopy(choice(tetrominos))
+            st_time = time.time()
+            ctr = 0
 
         glfw.swap_buffers(Window)
 
