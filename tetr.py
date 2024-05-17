@@ -51,6 +51,11 @@ tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)], # I
                [(0, 0), (0, -1), (0, 1), (1, -1)], # J
                [(0, 0), (0, -1), (0, 1), (-1, 0)]] # T
 
+class Tetromino:
+    def __init__(self, pos, name, mp):
+        self.pos = pos
+        self.name = name + 1
+        self.mp = mp
 field = [[0 for i in range(GW)] for j in range (GH)]
 
 
@@ -94,42 +99,42 @@ def gameEvent(grid, tetromino, dwn, ctr, TILE, score, field, Window):
 
     #Rotate Tetromino
     old_tet = deepcopy(tetromino)
-    center = tetromino[0]
+    center = tetromino.mp[0]
     if rotate:
         for i in range(4):
-            x = tetromino[i].y - center.y
-            y = tetromino[i].x - center.x
-            tetromino[i].x = center.x - x
-            tetromino[i].y = center.y + y
-            if bump_walls(tetromino[i]):
+            x = tetromino.mp[i].y - center.y
+            y = tetromino.mp[i].x - center.x
+            tetromino.mp[i].x = center.x - x
+            tetromino.mp[i].y = center.y + y
+            if bump_walls(tetromino.mp[i]):
                 tetromino = deepcopy(old_tet)
                 break
-            elif bump_ground(tetromino[i], field):
+            elif bump_ground(tetromino.mp[i], field):
                 tetromino = deepcopy(old_tet)
                 break
 
     # Drawing Tetromino
     # showTetromino(tetromino, Window)
-    [engine.drawRect(engine.Rect(tetromino[i].x*TILE,tetromino[i].y*TILE,TILE-2, TILE-2, tetromino[i].color), 2, Window)for i, t in enumerate(tetromino)]
+    [engine.drawRect(engine.Rect(tetromino.mp[i].x*TILE,tetromino.mp[i].y*TILE,TILE-2, TILE-2, tetromino.mp[i].color), 2, Window)for i, t in enumerate(tetromino.mp)]
     
     for y, raw in enumerate(field):
         for x, col in enumerate(raw):
             if col:
-                engine.drawRect(engine.Rect(x*TILE, y*TILE, TILE-2, TILE-2), 2, Window)
+                engine.drawRect(engine.Rect(x*TILE, y*TILE, TILE-2, TILE-2, palettes[1][col-1]), 2, Window)
     
     old_tet = deepcopy(tetromino)
     for i in range(4):
-        tetromino[i].x +=dx
-        tetromino[i].y +=dy
-        if bump_walls(tetromino[i]):
+        tetromino.mp[i].x +=dx
+        tetromino.mp[i].y +=dy
+        if bump_walls(tetromino.mp[i]):
             tetromino = deepcopy(old_tet)
             break
-        elif bump_ground(tetromino[i], field):
+        elif bump_ground(tetromino.mp[i], field):
             tetromino = deepcopy(old_tet)
             ctr += 2
             if ctr > 30:
                 for i in range(4):
-                    field[tetromino[i].y][tetromino[i].x] = 1
+                    field[tetromino.mp[i].y][tetromino.mp[i].x] = tetromino.name
                 change = True
             break
     for i in range(GW):
@@ -174,7 +179,7 @@ def main():
     # Set up to use the modelview matrix
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    tetrominos=[[engine.Rect(x+GW//2, y+1, TILE, TILE, palettes[1][i]) for x, y in tetromino] for i, tetromino in enumerate(tetrominos_pos)]
+    tetrominos=[Tetromino(tetromino, i, [engine.Rect(x+GW//2, y+1, TILE, TILE, palettes[1][i]) for x, y in tetromino]) for i, tetromino in enumerate(tetrominos_pos)]
     grid = [engine.Rect(x*TILE, y * TILE, TILE, TILE, (127, 127, 127)) for x in range(GW) for y in range(GH)]
     field = [[0 for i in range(GW)] for j in range (GH)]
     tetromino = deepcopy(choice(tetrominos))
@@ -196,7 +201,7 @@ def main():
         engine.render_text(W/2, 230, 15, 3, "[<] left [>] right [^] rotate [v] down")
         engine.render_text(W/2, 300, 40, 5, "score")
         engine.render_text(W/2, 350, 50, 7, f"{str(score)}")
-        [engine.drawRect(engine.Rect(W/2+next_tet[i].x*TILE,H/2+next_tet[i].y*TILE,TILE-2, TILE-2, next_tet[i].color), 2, Window)for i, t in enumerate(next_tet)]
+        [engine.drawRect(engine.Rect(W/2+next_tet.mp[i].x*TILE,H/2+next_tet.mp[i].y*TILE,TILE-2, TILE-2, next_tet.mp[i].color), 2, Window)for i, t in enumerate(next_tet.mp)]
         tetromino, change, ctr, score, field = gameEvent(grid, tetromino, dy, ctr, TILE, score, field, Window)
 
         if change:
