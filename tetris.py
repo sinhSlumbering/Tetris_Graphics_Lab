@@ -65,11 +65,15 @@ class GameState:
         self.tile_size = tile_size
         self.grid = [engine.Rect(x*tile_size, y * tile_size, tile_size, tile_size, (127, 127, 127)) for x in range(GW) for y in range(GH)]
         self.field = [[0 for _ in range(GW)] for _ in range(GH)]
-        self.tetrominos = [Tetromino(tetromino, i, [engine.Rect(x+GW//2, y+1, tile_size, tile_size, palettes[1][i]) for x, y in tetromino]) for i, tetromino in enumerate(tetrominos_pos)]
+        self.tetrominos = [Tetromino(tetromino, i, [engine.Rect(x+GW//2, y+1, tile_size, tile_size, palettes[0][i]) for x, y in tetromino]) for i, tetromino in enumerate(tetrominos_pos)]
         self.tetromino = deepcopy(choice(self.tetrominos))
         self.next_tetromino = deepcopy(self.tetrominos[6])
+        self.palette_index = 0
         self.score = 0
         self.ctr = 0
+        self.lines_cleared = 0
+        self.level = 1
+        self.fall_speed = 1.0
         self.start_time = time.time()
         self.high_score = self.load_high_score()
 
@@ -108,6 +112,22 @@ class GameState:
             else:
                 lines += 1
         self.score += points[lines]
+        self.lines_cleared += lines
+        if self.lines_cleared >= 10:
+            self.level_up()
+
+    def level_up(self):
+        self.lines_cleared = 0
+        self.level += 1
+        self.fall_speed = max(0.1, 1.0 - (self.level - 1) * 0.05)
+        self.change_palette()
+
+    def change_palette(self):
+        self.palette_index = self.level % len(palettes)
+        new_palette = palettes[self.palette_index]
+        for tetromino in self.tetrominos:
+            for block in tetromino.mp:
+                block.color = new_palette[tetromino.name - 1]
 
     def game_event(self, dy):
         change = False
@@ -139,7 +159,7 @@ class GameState:
         for y, raw in enumerate(self.field):
             for x, col in enumerate(raw):
                 if col:
-                    engine.drawRect(engine.Rect(x * self.tile_size, y * self.tile_size, self.tile_size - 2, self.tile_size - 2, palettes[1][col - 1]), 2, self.window)
+                    engine.drawRect(engine.Rect(x * self.tile_size, y * self.tile_size, self.tile_size - 2, self.tile_size - 2, palettes[self.palette_index][col - 1]), 2, self.window)
 
         old_tet = deepcopy(self.tetromino)
         for i in range(4):
@@ -178,8 +198,12 @@ class GameState:
         self.field = [[0 for _ in range(GW)] for _ in range(GH)]
         self.tetromino = deepcopy(choice(self.tetrominos))
         self.next_tetromino = deepcopy(choice(self.tetrominos))
+        self.palette_index = 0
         self.score = 0
         self.ctr = 0
+        self.lines_cleared = 0
+        self.level = 1
+        self.fall_speed = 1.0
         self.start_time = time.time()
 
 class StartScreen:
@@ -303,7 +327,7 @@ def main():
 
         else:
             dy = 0
-            if time.time() - game_state.start_time > 1 and game_state.ctr < 25:
+            if time.time() - game_state.start_time > game_state.fall_speed and game_state.ctr < 25:
                 dy = 1
                 game_state.start_time = time.time()
                 game_state.ctr += 1
@@ -315,6 +339,7 @@ def main():
             engine.render_text(W / 2, 300, 40, 5, "Score")
             engine.render_text(W / 2, 350, 50, 7, f"{str(game_state.score)}")
             engine.render_text(W / 2, 400, 30, 5, f"High Score: {str(game_state.high_score)}")
+            engine.render_text(W / 2, 450, 30, 5, f"Level: {str(game_state.level)}")
             [engine.drawRect(engine.Rect(W / 2 + game_state.next_tetromino.mp[i].x * TILE, H / 2 + game_state.next_tetromino.mp[i].y * TILE, TILE - 2, TILE - 2, game_state.next_tetromino.mp[i].color), 2, Window) for i, t in enumerate(game_state.next_tetromino.mp)]
             change, game_over = game_state.game_event(dy)
 
