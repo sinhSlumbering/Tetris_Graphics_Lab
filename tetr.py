@@ -8,13 +8,9 @@ import time
 from copy import deepcopy
 from random import choice, randrange
 
-
 GW, GH = 10, 20
-W, H = 800, 600
-WL, WR, WH = -W/2, W/2-1, -H
-Window = None
 MODE = 0
-TILE = 25
+
 
 tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)],
                [(0, -1), (-1, -1), (-1, 0), (0, 0)],
@@ -24,7 +20,6 @@ tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)],
                [(0, 0), (0, -1), (0, 1), (1, -1)],
                [(0, 0), (0, -1), (0, 1), (-1, 0)]]
 
-tetrominos=[[engine.Rect(x+GW//2, y+1, TILE, TILE) for x, y in tetromino] for tetromino in tetrominos_pos]
 field = [[0 for i in range(GW)] for j in range (GH)]
 
 
@@ -47,7 +42,7 @@ def bump_ground(rect):
         return True
     return False
 
-def gameEvent(grid, tetromino, dwn, ctr, Window):
+def gameEvent(grid, tetromino, dwn, ctr, TILE, Window):
     change = False
     rotate = False
     dx = 0
@@ -91,11 +86,12 @@ def gameEvent(grid, tetromino, dwn, ctr, Window):
                 break
 
     # Drawing Tetromino
-    [engine.drawRect(engine.Rect(int(tetromino[i].x*TILE),int(tetromino[i].y*TILE),TILE-2, TILE-2), 2, Window)for i, t in enumerate(tetromino)]
+    # showTetromino(tetromino, Window)
+    [engine.drawRect(engine.Rect(tetromino[i].x*TILE,tetromino[i].y*TILE,TILE-2, TILE-2), 2, Window)for i, t in enumerate(tetromino)]
     for y, raw in enumerate(field):
         for x, col in enumerate(raw):
             if col:
-                engine.drawRect(engine.Rect(int(x*TILE), int(y*TILE), TILE-2, TILE-2), 2, Window)
+                engine.drawRect(engine.Rect(x*TILE, y*TILE, TILE-2, TILE-2), 2, Window)
     
     old_tet = deepcopy(tetromino)
     for i in range(4):
@@ -119,7 +115,15 @@ def main():
     # Initialize GLFW
     if not glfw.init():
         return
-    
+    # get monitor
+    monitor = glfw.get_primary_monitor()
+    vidmode = glfw.get_video_mode(monitor)
+    v_width = vidmode.size.width
+    v_height = vidmode.size.height
+    W = v_width
+    H = v_height
+    TILE = int(v_height/24)
+    # print(v_width, v_height, GW, GH, TILE)
     Window = glfw.create_window(W, H, "Tetris", None, None)
     if not Window:
         glfw.terminate()
@@ -127,7 +131,7 @@ def main():
     # Enable key events
     
     glfw.set_input_mode(Window,glfw.STICKY_KEYS,GL_FALSE) 
-
+    
     # Enable key event callback
     # glfw.set_key_callback(Window,key_event)
     glfw.make_context_current(Window)
@@ -142,7 +146,7 @@ def main():
     # Set up to use the modelview matrix
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-
+    tetrominos=[[engine.Rect(x+GW//2, y+1, TILE, TILE) for x, y in tetromino] for tetromino in tetrominos_pos]
     grid = [engine.Rect(x*TILE, y * TILE, TILE, TILE) for x in range(GW) for y in range(GH)]
     tetromino = deepcopy(choice(tetrominos))
     st_time = time.time()
@@ -156,8 +160,13 @@ def main():
             ctr += 1
         # Clear the screen
         glClear(GL_COLOR_BUFFER_BIT)
+        engine.render_text(W/2, 70, 70, 10, "Tetris")
+        engine.render_text(W/2, 170, 30, 5, "Controls")
+        engine.render_text(W/2, 230, 15, 3, "[<] left [>] right [^] rotate [v] down")
+        engine.render_text(W/2, 300, 40, 5, "score")
+        engine.render_text(W/2, 350, 50, 7, "0000000")
 
-        tetromino, change, ctr = gameEvent(grid, tetromino, dy, ctr, Window)
+        tetromino, change, ctr = gameEvent(grid, tetromino, dy, ctr, TILE, Window)
 
         if change:
             tetromino = deepcopy(choice(tetrominos))

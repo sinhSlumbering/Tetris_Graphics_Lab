@@ -376,6 +376,34 @@ font = {
         0b00010,
         0b01110,
     ],
+    '>':[
+        0b10000,
+        0b01000,
+        0b00100,
+        0b00010,
+        0b00100,
+        0b01000,
+        0b10000,
+    ],
+    '<':[
+        0b00001,
+        0b00010,
+        0b00100,
+        0b01000,
+        0b00100,
+        0b00010,
+        0b00001,
+    ],
+    '^':[
+        0b00000,
+        0b00000,
+        0b00000,
+        0b00100,
+        0b01010,
+        0b01010,
+        0b10001,
+    ]
+
 }
 
 def get_char_bitmap(char):
@@ -397,7 +425,7 @@ def render_text(x, y, height, pointSize, text):
             bits = bitmap[row]
             for col in range(5):
                 if bits & (1 << (4 - col)):
-                    glVertex2f(x + col * scale, y - row * scale)
+                    glVertex2f(x + col * scale, y + row * scale)
         x += 6 * scale  # Move to the next character position
 
     glEnd() 
