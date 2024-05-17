@@ -10,7 +10,7 @@ from random import choice, randrange
 
 GW, GH = 10, 20
 MODE = 0
-
+points = {0: 0, 1:100, 2:400, 3: 800, 4: 1600}
 
 tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)],
                [(0, -1), (-1, -1), (-1, 0), (0, 0)],
@@ -23,26 +23,16 @@ tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)],
 field = [[0 for i in range(GW)] for j in range (GH)]
 
 
-
-def showTetromino(tetromino, Window):
-    print(tetromino)
-    tet_rect = engine.Rect(0,0, TILE-2, TILE-2)
-    for i in range(4):
-        print(tetromino[i].points)
-        tet_rect.x = tetromino[i].x * TILE-2
-        tet_rect.y = tetromino[i].y * TILE -2
-        engine.drawRect(tet_rect, 2, Window)
-
 def bump_walls(rect):
     if rect.x < 0 or rect.x > GW -1:
         return True
     return False
-def bump_ground(rect):
+def bump_ground(rect, field):
     if rect.y > GH -1 or field[rect.y][rect.x]:
         return True
     return False
 
-def gameEvent(grid, tetromino, dwn, ctr, TILE, Window):
+def gameEvent(grid, tetromino, dwn, ctr, TILE, score, field, Window):
     change = False
     rotate = False
     dx = 0
@@ -56,7 +46,7 @@ def gameEvent(grid, tetromino, dwn, ctr, TILE, Window):
     elif glfw.get_key(Window, glfw.KEY_DOWN):
         dy = 1
     #check lines
-    line = GH-1
+    line, lines = GH-1, 0
     for row in range(GH-1, -1, -1):
         count = 0
         for i in range(GW):
@@ -65,7 +55,9 @@ def gameEvent(grid, tetromino, dwn, ctr, TILE, Window):
             field[line][i] = field[row][i]
         if count < GW:
             line -= 1
-
+        else:
+            lines += 1
+    score += points[lines]
     # Draw Grid
     [engine.drawRect(rect, 1, Window) for rect in grid]
 
@@ -81,7 +73,7 @@ def gameEvent(grid, tetromino, dwn, ctr, TILE, Window):
             if bump_walls(tetromino[i]):
                 tetromino = deepcopy(old_tet)
                 break
-            elif bump_ground(tetromino[i]):
+            elif bump_ground(tetromino[i], field):
                 tetromino = deepcopy(old_tet)
                 break
 
@@ -100,7 +92,7 @@ def gameEvent(grid, tetromino, dwn, ctr, TILE, Window):
         if bump_walls(tetromino[i]):
             tetromino = deepcopy(old_tet)
             break
-        elif bump_ground(tetromino[i]):
+        elif bump_ground(tetromino[i], field):
             tetromino = deepcopy(old_tet)
             ctr += 2
             if ctr > 30:
@@ -108,8 +100,12 @@ def gameEvent(grid, tetromino, dwn, ctr, TILE, Window):
                     field[tetromino[i].y][tetromino[i].x] = 1
                 change = True
             break
+    for i in range(GW):
+        if field[0][i]:
+            field = [[0 for i in range(GW)] for i in range(GH)]
+            score = 0
             
-    return tetromino, change, ctr
+    return tetromino, change, ctr, score, field
 
 def main():
     # Initialize GLFW
@@ -148,9 +144,11 @@ def main():
     glLoadIdentity()
     tetrominos=[[engine.Rect(x+GW//2, y+1, TILE, TILE) for x, y in tetromino] for tetromino in tetrominos_pos]
     grid = [engine.Rect(x*TILE, y * TILE, TILE, TILE) for x in range(GW) for y in range(GH)]
+    field = [[0 for i in range(GW)] for j in range (GH)]
     tetromino = deepcopy(choice(tetrominos))
     st_time = time.time()
     ctr = 0
+    score = 0
     while not glfw.window_should_close(Window):
         glfw.poll_events()
         dy = 0
@@ -164,9 +162,9 @@ def main():
         engine.render_text(W/2, 170, 30, 5, "Controls")
         engine.render_text(W/2, 230, 15, 3, "[<] left [>] right [^] rotate [v] down")
         engine.render_text(W/2, 300, 40, 5, "score")
-        engine.render_text(W/2, 350, 50, 7, "0000000")
+        engine.render_text(W/2, 350, 50, 7, f"{str(score)}")
 
-        tetromino, change, ctr = gameEvent(grid, tetromino, dy, ctr, TILE, Window)
+        tetromino, change, ctr, score, field = gameEvent(grid, tetromino, dy, ctr, TILE, score, field, Window)
 
         if change:
             tetromino = deepcopy(choice(tetrominos))
