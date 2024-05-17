@@ -12,13 +12,44 @@ GW, GH = 10, 20
 MODE = 0
 points = {0: 0, 1:100, 2:400, 3: 800, 4: 1600}
 
-tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)],
-               [(0, -1), (-1, -1), (-1, 0), (0, 0)],
-               [(-1, 0), (-1, 1), (0, 0), (0, -1)],
-               [(0, 0), (-1, 0), (0, 1), (-1, -1)],
-               [(0, 0), (0, -1), (0, 1), (-1, -1)],
-               [(0, 0), (0, -1), (0, 1), (1, -1)],
-               [(0, 0), (0, -1), (0, 1), (-1, 0)]]
+palettes = {
+    0: [
+        (0, 255, 255),  # Cyan
+        (255, 255, 0),  # Yellow
+        (128, 0, 128),  # Purple
+        (0, 255, 0),    # Green
+        (255, 0, 0),    # Red
+        (0, 0, 255),    # Blue
+        (255, 165, 0)   # Orange
+    ],
+    1: 
+    [
+        (173, 216, 230),  # Light Blue
+        (255, 255, 224),  # Light Yellow
+        (216, 191, 216),  # Light Purple
+        (144, 238, 144),  # Light Green
+        (240, 128, 128),  # Light Coral
+        (176, 196, 222),  # Light Steel Blue
+        (255, 218, 185)   # Peach
+    ], 
+    2: 
+    [
+        (0, 255, 255),   # Neon Cyan
+        (255, 255, 0),   # Neon Yellow
+        (255, 0, 255),   # Neon Magenta
+        (57, 255, 20),   # Neon Green
+        (255, 36, 0),    # Neon Red
+        (0, 0, 255),     # Neon Blue
+        (255, 140, 0)    # Neon Orange
+    ]
+}
+tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)], # I
+               [(0, -1), (-1, -1), (-1, 0), (0, 0)], # O
+               [(-1, 0), (-1, 1), (0, 0), (0, -1)], # Z
+               [(0, 0), (-1, 0), (0, 1), (-1, -1)], # S
+               [(0, 0), (0, -1), (0, 1), (-1, -1)], # L
+               [(0, 0), (0, -1), (0, 1), (1, -1)], # J
+               [(0, 0), (0, -1), (0, 1), (-1, 0)]] # T
 
 field = [[0 for i in range(GW)] for j in range (GH)]
 
@@ -79,7 +110,8 @@ def gameEvent(grid, tetromino, dwn, ctr, TILE, score, field, Window):
 
     # Drawing Tetromino
     # showTetromino(tetromino, Window)
-    [engine.drawRect(engine.Rect(tetromino[i].x*TILE,tetromino[i].y*TILE,TILE-2, TILE-2), 2, Window)for i, t in enumerate(tetromino)]
+    [engine.drawRect(engine.Rect(tetromino[i].x*TILE,tetromino[i].y*TILE,TILE-2, TILE-2, tetromino[i].color), 2, Window)for i, t in enumerate(tetromino)]
+    
     for y, raw in enumerate(field):
         for x, col in enumerate(raw):
             if col:
@@ -142,10 +174,11 @@ def main():
     # Set up to use the modelview matrix
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    tetrominos=[[engine.Rect(x+GW//2, y+1, TILE, TILE) for x, y in tetromino] for tetromino in tetrominos_pos]
-    grid = [engine.Rect(x*TILE, y * TILE, TILE, TILE) for x in range(GW) for y in range(GH)]
+    tetrominos=[[engine.Rect(x+GW//2, y+1, TILE, TILE, palettes[1][i]) for x, y in tetromino] for i, tetromino in enumerate(tetrominos_pos)]
+    grid = [engine.Rect(x*TILE, y * TILE, TILE, TILE, (127, 127, 127)) for x in range(GW) for y in range(GH)]
     field = [[0 for i in range(GW)] for j in range (GH)]
     tetromino = deepcopy(choice(tetrominos))
+    next_tet = deepcopy(tetrominos[6])
     st_time = time.time()
     ctr = 0
     score = 0
@@ -163,11 +196,12 @@ def main():
         engine.render_text(W/2, 230, 15, 3, "[<] left [>] right [^] rotate [v] down")
         engine.render_text(W/2, 300, 40, 5, "score")
         engine.render_text(W/2, 350, 50, 7, f"{str(score)}")
-
+        [engine.drawRect(engine.Rect(W/2+next_tet[i].x*TILE,H/2+next_tet[i].y*TILE,TILE-2, TILE-2, next_tet[i].color), 2, Window)for i, t in enumerate(next_tet)]
         tetromino, change, ctr, score, field = gameEvent(grid, tetromino, dy, ctr, TILE, score, field, Window)
 
         if change:
-            tetromino = deepcopy(choice(tetrominos))
+            tetromino = next_tet
+            next_tet = deepcopy(choice(tetrominos))
             st_time = time.time()
             ctr = 0
 

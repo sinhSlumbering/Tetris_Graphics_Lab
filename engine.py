@@ -10,7 +10,8 @@ BORDER = 1
 FILLED = 2
 
 class Rect:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, color=(255, 255, 255)):
+        self.color = color
         self.x = x
         self.y = y
         self.width = width
@@ -564,14 +565,14 @@ def initialize_active_edge_table(scanline, global_edge_table):
             break
     return active_edge_table
 
-def fill_polygon(vertices):
+def fill_polygon(vertices, color):
     all_edges = initialize_all_edges(vertices)
     global_edge_table = initialize_global_edge_table(all_edges)
     scanline = global_edge_table[0].ymin
     active_edge_table = initialize_active_edge_table(scanline, global_edge_table)
     for edge in active_edge_table:
         global_edge_table.remove(edge)
-    glColor3ub(255, 255, 255)
+    glColor3ub(color[0], color[1], color[2])
     glBegin(GL_POINTS)
     while active_edge_table:
         for i in range(0, len(active_edge_table), 2):
@@ -636,12 +637,12 @@ def calculate_centroid(vertices):
     return (cx, cy)
 
 
-def drawPolygon(points, mode, Window):
+def drawPolygon(points, mode, color, Window):
     cx, cy = calculate_centroid(points)
     n = len(points)
 
     if mode == 1:
-        glColor3ub(255, 255, 255)  
+        glColor3ub(color[0], color[1], color[2])  
         glPointSize(1.0)
         for i in range(n):
             x0, y0 = points[i]
@@ -653,7 +654,7 @@ def drawPolygon(points, mode, Window):
             draw_line_2(dx0, dy0, dx1, dy1, zone)
             glEnd()
     elif mode == 0:
-        glColor3ub(255, 255, 255)
+        glColor3ub(color[0], color[1], color[2])
         glPointSize(5.0)
         glBegin(GL_POINTS) # White for vertices
         for (x, y) in points:
@@ -661,9 +662,9 @@ def drawPolygon(points, mode, Window):
         glEnd()
 
     elif mode == 2:
-        fill_polygon(points)
+        fill_polygon(points, color)
     return points
 
 def drawRect(rect, mode, Window):
-    rect.points = drawPolygon(rect.points, mode, Window)
+    rect.points = drawPolygon(rect.points, mode, rect.color, Window)
     return rect 
