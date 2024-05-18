@@ -4,7 +4,7 @@ import math
 import random
 import numpy as np
 
-
+# Constants to define drawing modes
 POINTS_ONLY = 0
 BORDER = 1
 FILLED = 2
@@ -408,11 +408,15 @@ font = {
 }
 
 def get_char_bitmap(char):
-    return font.get(char.upper(), [0] * 7)  # Return empty bitmap for undefined characters
+    # Return the bitmap for the given character or an empty bitmap for undefined characters
+
+    return font.get(char.upper(), [0] * 7)  
 
 
 # Render function
 def render_text(x, y, height, pointSize, text):
+    # Set text color to white and point size
+
     glColor3ub(255, 255, 255)
     glPointSize(pointSize)
     glBegin(GL_POINTS)
@@ -432,7 +436,7 @@ def render_text(x, y, height, pointSize, text):
     glEnd() 
         
 
-
+# Determine the zone based on the slope of the line
 def get_zone(x0, y0, x1, y1):
     dx= x1-x0
     dy= y1-y0
@@ -457,6 +461,7 @@ def get_zone(x0, y0, x1, y1):
             return 4
         return 5
 
+# Convert from zone coordinates back to original coordinates
 def return_back(zone, x, y): 
     if zone == 0:
         return y, -x
@@ -474,7 +479,8 @@ def return_back(zone, x, y):
         return -x, -y 
     else:
         return y, x
-    
+
+# Convert from all zone coordinates to zone 2 coordinates
 def allZone_to_2(zone, x, y): 
     if zone == 0:
         return -y, x
@@ -494,10 +500,13 @@ def allZone_to_2(zone, x, y):
         return y, x
 
 
+# Draw a pixel in the given zone
 def draw_pixel(x, y, zone):
     x, y = return_back(zone, x, y)
     glVertex2f(x, y)
 
+    
+# Draw a line using a modified Bresenham's algorithm
 def draw_line_2(x0, y0, x1, y1, zone):
     dx = x1 - x0
     dy = y1 - y0
@@ -526,6 +535,7 @@ def drawLine(x0, y0, x1, y1):
     glEnd()
 
 
+# Initialize all edges for polygon filling
 def initialize_all_edges(vertices):
     all_edges = []
     n = len(vertices)
@@ -543,6 +553,7 @@ def initialize_all_edges(vertices):
             all_edges.append(Edge(ymin, ymax, x, slope_inverse, x1, y1, x2, y2))
     return all_edges
 
+#Initialize the global edge table
 def initialize_global_edge_table(all_edges):
     global_edge_table = []
     for edge in all_edges:
@@ -556,6 +567,7 @@ def initialize_global_edge_table(all_edges):
         global_edge_table.insert(index, edge)
     return global_edge_table
 
+# Initialize the active edge table for the given scanline
 def initialize_active_edge_table(scanline, global_edge_table):
     active_edge_table = []
     for edge in global_edge_table:
@@ -565,6 +577,7 @@ def initialize_active_edge_table(scanline, global_edge_table):
             break
     return active_edge_table
 
+# Fill the polygon using the scanline fill algorithm
 def fill_polygon(vertices, color):
     all_edges = initialize_all_edges(vertices)
     global_edge_table = initialize_global_edge_table(all_edges)
@@ -598,13 +611,15 @@ def fill_polygon(vertices, color):
     glEnd()
 
 
-
+# Return the rotation matrix for a given angle
 def rotation_matrix(angle):
     theta = np.radians(angle)
     c = np.cos(theta)
     s = np.sin(theta)
     return np.array([[c, -s], [s, c]])
 
+
+# Rotate points around a center by a given angle
 def rotate_points(points, center, angle):
     points = np.array(points)
     center = np.array(center)
@@ -613,6 +628,8 @@ def rotate_points(points, center, angle):
     rotated_points += center
     return rotated_points.tolist()
 
+
+#Calculate the area of a polygon
 def calculate_area(vertices):
     area = 0
     n = len(vertices)
@@ -622,6 +639,8 @@ def calculate_area(vertices):
         area += x1 * y2 - x2 * y1
     return abs(area) / 2
 
+
+# Calculate the centroid of a polygon
 def calculate_centroid(vertices):
     area = calculate_area(vertices)
     cx = cy = 0
@@ -637,10 +656,12 @@ def calculate_centroid(vertices):
     return (cx, cy)
 
 
+# Draw a polygon based on the specified mode (points, border, filled)
 def drawPolygon(points, mode, color, Window):
     cx, cy = calculate_centroid(points)
     n = len(points)
 
+    # Draw the border of the polygon
     if mode == 1:
         glColor3ub(color[0], color[1], color[2])  
         glPointSize(1.0)
@@ -653,6 +674,8 @@ def drawPolygon(points, mode, color, Window):
             glBegin(GL_POINTS)
             draw_line_2(dx0, dy0, dx1, dy1, zone)
             glEnd()
+
+    # Draw the vertices of the polygon
     elif mode == 0:
         glColor3ub(color[0], color[1], color[2])
         glPointSize(5.0)
@@ -661,10 +684,13 @@ def drawPolygon(points, mode, color, Window):
             glVertex2f(x,y)
         glEnd()
 
+    # Fill the polygon
     elif mode == 2:
         fill_polygon(points, color)
     return points
 
+
+# Draw a rectangle based on the specified mode
 def drawRect(rect, mode, Window):
     rect.points = drawPolygon(rect.points, mode, rect.color, Window)
     return rect 
