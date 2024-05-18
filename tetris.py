@@ -463,6 +463,7 @@ def main():
             engine.render_text(W / 2, 350, 50, 7, f"{str(game_state.score)}")
             engine.render_text(W / 2, 470, 30, 5, f"High Score: {str(game_state.high_score)}")
             engine.render_text(W / 2, 520, 30, 5, f"Level: {str(game_state.level)}")
+            engine.render_text(W / 2, 600, 15, 3, f"Press P to pause")
 
             # Render next tetromino box and text
             next_tetromino_x = W - (TILE * 8)
