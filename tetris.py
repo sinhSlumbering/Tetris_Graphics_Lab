@@ -95,7 +95,6 @@ palettes = {
     ]
 }
 
-
 tetrominos_pos = [[(-1, 0), (-2, 0), (0, 0), (1, 0)], # I
                [(0, -1), (-1, -1), (-1, 0), (0, 0)], # O
                [(-1, 0), (-1, 1), (0, 0), (0, -1)], # Z
@@ -207,6 +206,11 @@ class GameState:
         for tetromino in self.tetrominos:
             for block in tetromino.mp:
                 block.color = new_palette[tetromino.name - 1] #colour update
+        for block in self.tetromino.mp:
+            block.color = new_palette[self.tetromino.name - 1]
+        for block in self.next_tetromino.mp:
+            block.color = new_palette[self.next_tetromino.name - 1]
+
 
     def game_event(self, dy):
         change = False
@@ -307,7 +311,7 @@ class StartScreen:
         engine.render_text(300, 100, 100, 10, "Tetris")
         engine.render_text(300, 200, 30, 5, "Press Enter to Start")
         engine.render_text(300, 300, 20, 4, "Controls:")
-        engine.render_text(300, 350, 15, 3, "[<] left [>] right [^] rotate [v] down")
+        engine.render_text(300, 350, 15, 3, "use arrow keys [<] left [>] right [^] rotate [v] down")
         glfw.swap_buffers(self.window)
 
     #input Handling, If Enter pressed, game started=True
@@ -440,18 +444,33 @@ def main():
             # Clear the screen
             glClear(GL_COLOR_BUFFER_BIT)
 
+            # Calculate center positions
+            center_x = (W - GW * TILE) // 2
+            center_y = (H - GH * TILE) // 2
+
             # Render UI text through rendering the bitmap for each character
             engine.render_text(W / 2, 70, 70, 10, "Tetris")
             engine.render_text(W / 2, 170, 30, 5, "Controls")
             engine.render_text(W / 2, 230, 15, 3, "[<] left [>] right [^] rotate [v] down")
-            engine.render_text(W / 2, 300, 40, 5, "Score")
+            engine.render_text(W / 2, 300, 40, 6, "Score")
             engine.render_text(W / 2, 350, 50, 7, f"{str(game_state.score)}")
-            engine.render_text(W / 2, 400, 30, 5, f"High Score: {str(game_state.high_score)}")
-            engine.render_text(W / 2, 450, 30, 5, f"Level: {str(game_state.level)}")
+            engine.render_text(W / 2, 470, 30, 5, f"High Score: {str(game_state.high_score)}")
+            engine.render_text(W / 2, 520, 30, 5, f"Level: {str(game_state.level)}")
 
-            # Render next tetromino using polygon filling algorithm
-            [engine.drawRect(engine.Rect(W / 2 + game_state.next_tetromino.mp[i].x * TILE, H / 2 + game_state.next_tetromino.mp[i].y * TILE, TILE - 2, TILE - 2, game_state.next_tetromino.mp[i].color), 2, Window) for i, t in enumerate(game_state.next_tetromino.mp)]
-           
+            # Render next tetromino box and text
+            next_tetromino_x = W - (TILE * 8)
+            next_tetromino_y = H // 2 - TILE * 3
+            engine.render_text(next_tetromino_x + TILE * 2.5, next_tetromino_y - TILE * 1.5, 20, 4, "Next")
+            engine.drawRect(engine.Rect(next_tetromino_x, next_tetromino_y, TILE * 6, TILE * 6, (255, 255, 255)), 1, Window)
+            [engine.drawRect(engine.Rect(next_tetromino_x - TILE*2 + game_state.next_tetromino.mp[i].x * TILE, next_tetromino_y + TILE * 2 + game_state.next_tetromino.mp[i].y * TILE, TILE - 2, TILE - 2, game_state.next_tetromino.mp[i].color), 2, Window) for i, t in enumerate(game_state.next_tetromino.mp)]
+
+            # Draw the playing field
+            for rect in game_state.grid:
+                rect.x += center_x
+                rect.y += center_y
+            for rect in game_state.grid:
+                engine.drawRect(rect, 1, Window)
+
             # Handle game events
             change, game_over = game_state.game_event(dy)
 
