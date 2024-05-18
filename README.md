@@ -8,10 +8,22 @@ Before you can run the Tetris game, you'll need to install the necessary depende
 
 ### Installing Dependencies
 
-To install the dependencies, you'll need to have `pip` installed on your machine. Open your terminal or command prompt and navigate to the directory where the `requirements.txt` file is located. Run the following command:
+You can install the dependencies using either `pip` or `conda`.
+
+#### Using `pip`
+
+To install the dependencies with `pip`, you'll need to have `pip` installed on your machine. Open your terminal or command prompt and navigate to the directory where the `requirements.txt` file is located. Run the following command:
 
 ```bash
 pip install -r requirements.txt
+```
+
+#### Using `conda`
+
+If you prefer to use `conda`, ensure you have `conda` installed. Open your terminal or command prompt and navigate to the directory where the `requirements.txt` file is located. Run the following command:
+
+```bash
+conda install --file requirements.txt
 ```
 
 ## Running the Game
