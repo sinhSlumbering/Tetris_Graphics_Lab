@@ -327,15 +327,18 @@ class PauseScreen:
     def render(self):
         glClear(GL_COLOR_BUFFER_BIT)
         engine.render_text(300, 200, 50, 7, "Paused")
-        engine.render_text(300, 300, 30, 5, "Press R to Resume")
+        engine.render_text(300, 300, 30, 5, "Press R to Restart")
         engine.render_text(300, 400, 30, 5, "Press ESC to Exit")
+        engine.render_text(300, 500, 30, 5, "Press Enter or P to Resume")
         glfw.swap_buffers(self.window)
 
     def handle_input(self):
         if glfw.get_key(self.window, glfw.KEY_R):
-            return "resume"
+            return "restart"
         if glfw.get_key(self.window, glfw.KEY_ESCAPE):
             return "exit"
+        if glfw.get_key(self.window, glfw.KEY_ENTER) or glfw.get_key(self.window, glfw.KEY_P):
+            return "resume"
         return None
 
 class GameOverScreen:
@@ -420,6 +423,10 @@ def main():
                 game_paused = False
             elif action == "exit":
                 break
+            elif action == "restart":
+                game_state.reset()
+                game_paused = False
+                game_over = False
 
         # Render game over screen and handle input
         elif game_over:
@@ -462,7 +469,7 @@ def main():
             next_tetromino_y = H // 2 - TILE * 3
             engine.render_text(next_tetromino_x + TILE * 2.5, next_tetromino_y - TILE * 1.5, 20, 4, "Next")
             engine.drawRect(engine.Rect(next_tetromino_x, next_tetromino_y, TILE * 6, TILE * 6, (255, 255, 255)), 1, Window)
-            [engine.drawRect(engine.Rect(next_tetromino_x - TILE*2 + game_state.next_tetromino.mp[i].x * TILE, next_tetromino_y + TILE * 2 + game_state.next_tetromino.mp[i].y * TILE, TILE - 2, TILE - 2, game_state.next_tetromino.mp[i].color), 2, Window) for i, t in enumerate(game_state.next_tetromino.mp)]
+            [engine.drawRect(engine.Rect(next_tetromino_x - TILE * 2 + game_state.next_tetromino.mp[i].x * TILE, next_tetromino_y + TILE * 2 + game_state.next_tetromino.mp[i].y * TILE, TILE - 2, TILE - 2, game_state.next_tetromino.mp[i].color), 2, Window) for i, t in enumerate(game_state.next_tetromino.mp)]
 
             # Draw the playing field
             for rect in game_state.grid:
